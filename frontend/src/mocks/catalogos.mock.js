@@ -1,0 +1,135 @@
+/**
+ * catalogos.mock.js
+ * Datos simulados de catálogos basados en el diccionario de datos del SRS.
+ * FASE 2 (Track B): Estos datos serán reemplazados por llamadas reales al API Gateway en la Fase 3.
+ *
+ * Contratos de API simulados:
+ *   GET /api/catalogos/tipos       → TIPOS_MASCOTA
+ *   GET /api/catalogos/razas       → RAZAS_MASCOTA (filtrar por tipoId)
+ *   GET /api/catalogos/tamanos     → TAMANOS
+ *   GET /api/catalogos/peso-ideal  → PESOS_IDEALES (filtrar por razaId + tamanoId)
+ */
+
+export const TIPOS_MASCOTA = [
+  { id: 1, nombre: 'Perro', emoji: '🐕' },
+  { id: 2, nombre: 'Gato', emoji: '🐈' },
+];
+
+export const RAZAS_MASCOTA = [
+  // --- Perros (tipoId: 1) ---
+  { id: 1, tipoId: 1, nombre: 'Labrador Retriever' },
+  { id: 2, tipoId: 1, nombre: 'Pastor Alemán' },
+  { id: 3, tipoId: 1, nombre: 'Bulldog Francés' },
+  { id: 4, tipoId: 1, nombre: 'Chihuahua' },
+  { id: 5, tipoId: 1, nombre: 'Golden Retriever' },
+  { id: 6, tipoId: 1, nombre: 'Poodle' },
+  { id: 7, tipoId: 1, nombre: 'Beagle' },
+  { id: 8, tipoId: 1, nombre: 'Yorkshire Terrier' },
+  { id: 9, tipoId: 1, nombre: 'Dóberman' },
+  { id: 10, tipoId: 1, nombre: 'Mestizo / Criollo' },
+
+  // --- Gatos (tipoId: 2) ---
+  { id: 11, tipoId: 2, nombre: 'Siamés' },
+  { id: 12, tipoId: 2, nombre: 'Persa' },
+  { id: 13, tipoId: 2, nombre: 'Maine Coon' },
+  { id: 14, tipoId: 2, nombre: 'Bengalí' },
+  { id: 15, tipoId: 2, nombre: 'Ragdoll' },
+  { id: 16, tipoId: 2, nombre: 'Sphynx' },
+  { id: 17, tipoId: 2, nombre: 'Doméstico / Mestizo' },
+];
+
+export const TAMANOS = [
+  { id: 1, nombre: 'Mini / Toy', descripcion: 'Menos de 5 kg en adulto' },
+  { id: 2, nombre: 'Pequeño', descripcion: '5 – 10 kg en adulto' },
+  { id: 3, nombre: 'Mediano', descripcion: '10 – 25 kg en adulto' },
+  { id: 4, nombre: 'Grande', descripcion: '25 – 45 kg en adulto' },
+  { id: 5, nombre: 'Gigante', descripcion: 'Más de 45 kg en adulto' },
+];
+
+/**
+ * TABLA A — Pesos Ideales por Raza y Tamaño (kg)
+ * Fuente: SRS Tabla A — Peso Ideal de Referencia
+ *
+ * @param {number} pesoActual  - Peso actual de la mascota en kg
+ * @param {number} pesoIdeal   - Peso ideal de referencia en kg
+ * @returns {number} IMA calculado con 2 decimales
+ */
+export function calcularIMA(pesoActual, pesoIdeal) {
+  if (!pesoIdeal || pesoIdeal <= 0) return null;
+  return Math.round((pesoActual / pesoIdeal) * 100) / 100;
+}
+
+/**
+ * Devuelve la clasificación del IMA según rangos definidos en el SRS.
+ * @param {number} ima - Valor numérico del IMA
+ * @returns {{ label: string, clase: string, descripcion: string }}
+ */
+export function clasificarIMA(ima) {
+  if (ima === null || isNaN(ima)) return { label: 'Sin calcular', clase: 'neutral', descripcion: '—' };
+  if (ima < 0.75)  return { label: 'Bajo Peso Severo', clase: 'underweight', descripcion: 'Requiere atención veterinaria urgente' };
+  if (ima < 0.85)  return { label: 'Bajo Peso',        clase: 'underweight', descripcion: 'Por debajo del rango saludable' };
+  if (ima <= 1.15) return { label: 'Peso Ideal',        clase: 'healthy',     descripcion: 'Rango saludable óptimo' };
+  if (ima <= 1.30) return { label: 'Sobrepeso',         clase: 'overweight',  descripcion: 'Ligeramente por encima del rango' };
+  return             { label: 'Obesidad',               clase: 'obese',       descripcion: 'Riesgo de salud elevado' };
+}
+
+// Peso ideal de referencia (kg): clave = `${razaId}-${tamanoId}`
+export const PESOS_IDEALES = {
+  // Labrador Retriever
+  '1-3': { pesoIdeal: 22, pesoMinKg: 18, pesoMaxKg: 27 },
+  '1-4': { pesoIdeal: 32, pesoMinKg: 27, pesoMaxKg: 36 },
+  // Pastor Alemán
+  '2-3': { pesoIdeal: 25, pesoMinKg: 20, pesoMaxKg: 30 },
+  '2-4': { pesoIdeal: 35, pesoMinKg: 30, pesoMaxKg: 40 },
+  // Bulldog Francés
+  '3-2': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 13 },
+  // Chihuahua
+  '4-1': { pesoIdeal: 2.5, pesoMinKg: 1.5, pesoMaxKg: 3.5 },
+  // Golden Retriever
+  '5-3': { pesoIdeal: 27, pesoMinKg: 22, pesoMaxKg: 32 },
+  '5-4': { pesoIdeal: 34, pesoMinKg: 29, pesoMaxKg: 38 },
+  // Poodle
+  '6-1': { pesoIdeal: 3,  pesoMinKg: 2,  pesoMaxKg: 4  },
+  '6-2': { pesoIdeal: 7,  pesoMinKg: 6,  pesoMaxKg: 9  },
+  // Beagle
+  '7-2': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 11 },
+  '7-3': { pesoIdeal: 13, pesoMinKg: 10, pesoMaxKg: 16 },
+  // Yorkshire
+  '8-1': { pesoIdeal: 2.5, pesoMinKg: 2, pesoMaxKg: 3.5 },
+  // Dóberman
+  '9-4': { pesoIdeal: 35, pesoMinKg: 30, pesoMaxKg: 40 },
+  // Mestizo Perro
+  '10-2': { pesoIdeal: 8,  pesoMinKg: 6,  pesoMaxKg: 10 },
+  '10-3': { pesoIdeal: 16, pesoMinKg: 12, pesoMaxKg: 22 },
+  '10-4': { pesoIdeal: 28, pesoMinKg: 24, pesoMaxKg: 35 },
+  // Siamés
+  '11-2': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
+  // Persa
+  '12-2': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
+  '12-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  // Maine Coon
+  '13-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  '13-4': { pesoIdeal: 10, pesoMinKg: 8,  pesoMaxKg: 12 },
+  // Bengalí
+  '14-2': { pesoIdeal: 5,  pesoMinKg: 4,  pesoMaxKg: 7  },
+  '14-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  // Ragdoll
+  '15-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  '15-4': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 11 },
+  // Sphynx
+  '16-2': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
+  // Doméstico Gato
+  '17-1': { pesoIdeal: 3,  pesoMinKg: 2,  pesoMaxKg: 4  },
+  '17-2': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
+  '17-3': { pesoIdeal: 6,  pesoMinKg: 5,  pesoMaxKg: 7  },
+};
+
+/** Obtiene el peso ideal dado una raza y tamaño */
+export function getPesoIdeal(razaId, tamanoId) {
+  return PESOS_IDEALES[`${razaId}-${tamanoId}`] || null;
+}
+
+/** Filtra razas por tipo de mascota */
+export function getRazasPorTipo(tipoId) {
+  return RAZAS_MASCOTA.filter(r => r.tipoId === tipoId);
+}
