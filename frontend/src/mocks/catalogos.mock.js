@@ -76,52 +76,45 @@ export function clasificarIMA(ima) {
 // Peso ideal de referencia (kg): clave = `${razaId}-${tamanoId}`
 export const PESOS_IDEALES = {
   // Labrador Retriever
-  '1-3': { pesoIdeal: 22, pesoMinKg: 18, pesoMaxKg: 27 },
   '1-4': { pesoIdeal: 32, pesoMinKg: 27, pesoMaxKg: 36 },
   // Pastor Alemán
-  '2-3': { pesoIdeal: 25, pesoMinKg: 20, pesoMaxKg: 30 },
   '2-4': { pesoIdeal: 35, pesoMinKg: 30, pesoMaxKg: 40 },
   // Bulldog Francés
   '3-2': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 13 },
   // Chihuahua
   '4-1': { pesoIdeal: 2.5, pesoMinKg: 1.5, pesoMaxKg: 3.5 },
   // Golden Retriever
-  '5-3': { pesoIdeal: 27, pesoMinKg: 22, pesoMaxKg: 32 },
   '5-4': { pesoIdeal: 34, pesoMinKg: 29, pesoMaxKg: 38 },
   // Poodle
-  '6-1': { pesoIdeal: 3,  pesoMinKg: 2,  pesoMaxKg: 4  },
   '6-2': { pesoIdeal: 7,  pesoMinKg: 6,  pesoMaxKg: 9  },
   // Beagle
-  '7-2': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 11 },
   '7-3': { pesoIdeal: 13, pesoMinKg: 10, pesoMaxKg: 16 },
   // Yorkshire
   '8-1': { pesoIdeal: 2.5, pesoMinKg: 2, pesoMaxKg: 3.5 },
   // Dóberman
   '9-4': { pesoIdeal: 35, pesoMinKg: 30, pesoMaxKg: 40 },
   // Mestizo Perro
-  '10-2': { pesoIdeal: 8,  pesoMinKg: 6,  pesoMaxKg: 10 },
   '10-3': { pesoIdeal: 16, pesoMinKg: 12, pesoMaxKg: 22 },
-  '10-4': { pesoIdeal: 28, pesoMinKg: 24, pesoMaxKg: 35 },
-  // Siamés
-  '11-2': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
-  // Persa
-  '12-2': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
-  '12-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
-  // Maine Coon
-  '13-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  // Siamés (Gato - Mediano)
+  '11-3': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
+  // Persa (Gato - Mediano)
+  '12-3': { pesoIdeal: 5,  pesoMinKg: 3,  pesoMaxKg: 7  },
+  // Maine Coon (Gato - Grande)
   '13-4': { pesoIdeal: 10, pesoMinKg: 8,  pesoMaxKg: 12 },
-  // Bengalí
-  '14-2': { pesoIdeal: 5,  pesoMinKg: 4,  pesoMaxKg: 7  },
-  '14-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
-  // Ragdoll
-  '15-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  // Bengalí (Gato - Mediano)
+  '14-3': { pesoIdeal: 6,  pesoMinKg: 4,  pesoMaxKg: 8  },
+  // Ragdoll (Gato - Grande)
   '15-4': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 11 },
-  // Sphynx
-  '16-2': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
-  // Doméstico Gato
-  '17-1': { pesoIdeal: 3,  pesoMinKg: 2,  pesoMaxKg: 4  },
-  '17-2': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
-  '17-3': { pesoIdeal: 6,  pesoMinKg: 5,  pesoMaxKg: 7  },
+  // Sphynx (Gato - Mediano)
+  '16-3': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
+  // Doméstico Gato (Gato - Mediano)
+  '17-3': { pesoIdeal: 5,  pesoMinKg: 4,  pesoMaxKg: 6  },
+};
+
+/** Mapeo de asignación automática de raza a tamaño fijo */
+export const RAZA_TAMANO_MAPPING = {
+  1: 4, 2: 4, 3: 2, 4: 1, 5: 4, 6: 2, 7: 3, 8: 1, 9: 4, 10: 3, // Perros
+  11: 3, 12: 3, 13: 4, 14: 3, 15: 4, 16: 3, 17: 3              // Gatos
 };
 
 /** Obtiene el peso ideal dado una raza y tamaño */

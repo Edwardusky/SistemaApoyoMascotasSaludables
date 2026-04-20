@@ -5,6 +5,7 @@ import {
   getMisSolicitudes, crearSolicitud, calcularMontoSugeridoService,
 } from '../services/api.service.js';
 import { ESTADOS } from '../mocks/solicitudes.mock.js';
+import { RAZA_TAMANO_MAPPING } from '../mocks/catalogos.mock.js';
 
 const MAX_MASCOTAS = 3;
 
@@ -133,6 +134,7 @@ export default function CiudadanoPage({ session }) {
     if (session?.curp) {
       getMisSolicitudes(session.curp)
         .then(setMisSolicitudes)
+        .catch(err => console.warn('No se pudieron cargar las solicitudes previas:', err.message))
         .finally(() => setLoadingSol(false));
     } else {
       setLoadingSol(false);
@@ -149,6 +151,18 @@ export default function CiudadanoPage({ session }) {
     setForm(prev => ({ ...prev, razaId: '', tamanoId: '' }));
     setPesoIdeal(null); setIMA(null); setClasificacion(null);
   }, [form.tipoId]);
+
+  // Efecto: Auto-asignación de Tamaño basado en la Raza (Tabla A y B)
+  useEffect(() => {
+    if (form.razaId) {
+      const tamanoAsignado = RAZA_TAMANO_MAPPING[form.razaId];
+      if (tamanoAsignado) {
+        setForm(prev => ({ ...prev, tamanoId: String(tamanoAsignado) }));
+      }
+    } else {
+      setForm(prev => ({ ...prev, tamanoId: '' }));
+    }
+  }, [form.razaId]);
 
   // Recalcular peso ideal e IMA cuando cambia raza, tamaño o peso
   useEffect(() => {
@@ -227,6 +241,13 @@ export default function CiudadanoPage({ session }) {
       errors.pesoActual = 'Ingresa un peso válido en kilogramos';
     return errors;
   };
+
+  // Filtrado de tamaños según tipo (Gato solo 3 y 4)
+  const tamanosFiltrados = tamanos.filter(t => {
+    if (!form.tipoId) return true;
+    if (form.tipoId === '2') return t.id === 3 || t.id === 4; // Gato: Mediano, Grande
+    return true; // Perro: Todos
+  });
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -490,10 +511,10 @@ export default function CiudadanoPage({ session }) {
 
                     <div className="form-group">
                       <label htmlFor="form-tamano" className="form-label">Tamaño <span className="required">*</span></label>
-                      <select id="form-tamano" name="tamanoId" className="form-select" value={form.tamanoId} onChange={handleChange} aria-required="true">
+                      <select id="form-tamano" name="tamanoId" className="form-select" value={form.tamanoId} onChange={handleChange} aria-required="true" disabled={!!form.razaId} title={form.razaId ? 'El tamaño se asigna automáticamente según la raza' : ''}>
                         <option value="">— Selecciona un tamaño —</option>
-                        {tamanos.map(t => (
-                          <option key={t.id} value={t.id}>{t.nombre} — {t.descripcion}</option>
+                        {tamanosFiltrados.map(t => (
+                          <option key={t.id} value={t.id}>{t.nombre}</option>
                         ))}
                       </select>
                       {formErrors.tamanoId && <p className="form-error">{formErrors.tamanoId}</p>}
