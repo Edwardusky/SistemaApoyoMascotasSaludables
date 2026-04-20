@@ -35,8 +35,8 @@ import {
 const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ─── CONFIG ─────────────────────────────────────────────────────────────────
-const USE_MOCKS = true;               // Cambiar a false en Fase 3
-const API_BASE_URL = '/api';          // URL del API Gateway (Track A)
+const USE_MOCKS = false;               // Cambiar a false en Fase 3
+const API_BASE_URL = 'http://localhost:8080/api';          // URL del API Gateway (Track A)
 
 // ─── CATÁLOGOS ───────────────────────────────────────────────────────────────
 
