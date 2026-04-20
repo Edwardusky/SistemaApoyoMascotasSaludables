@@ -66,11 +66,10 @@ export function calcularIMA(pesoActual, pesoIdeal) {
  */
 export function clasificarIMA(ima) {
   if (ima === null || isNaN(ima)) return { label: 'Sin calcular', clase: 'neutral', descripcion: '—' };
-  if (ima < 0.75)  return { label: 'Bajo Peso Severo', clase: 'underweight', descripcion: 'Requiere atención veterinaria urgente' };
-  if (ima < 0.85)  return { label: 'Bajo Peso',        clase: 'underweight', descripcion: 'Por debajo del rango saludable' };
-  if (ima <= 1.15) return { label: 'Peso Ideal',        clase: 'healthy',     descripcion: 'Rango saludable óptimo' };
-  if (ima <= 1.30) return { label: 'Sobrepeso',         clase: 'overweight',  descripcion: 'Ligeramente por encima del rango' };
-  return             { label: 'Obesidad',               clase: 'obese',       descripcion: 'Riesgo de salud elevado' };
+  if (ima < 0.85)  return { label: 'Bajo peso',  clase: 'underweight', descripcion: 'Por debajo del rango saludable (50% de apoyo)' };
+  if (ima <= 1.15) return { label: 'Peso ideal', clase: 'normal',      descripcion: 'Rango saludable (100% de apoyo)' };
+  if (ima <= 1.30) return { label: 'Sobrepeso',  clase: 'overweight',  descripcion: 'Requiere plan de dieta (50% de apoyo)' };
+  return           { label: 'Obeso',      clase: 'obese',       descripcion: 'Riesgo alto para la salud (0% de apoyo)' };
 }
 
 // Peso ideal de referencia (kg): clave = `${razaId}-${tamanoId}`

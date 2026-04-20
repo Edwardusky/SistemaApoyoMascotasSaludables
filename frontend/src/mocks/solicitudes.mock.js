@@ -170,8 +170,10 @@ export const POLITICAS_APOYO = [
 /** Calcula el monto sugerido según el IMA */
 export function calcularMontoSugerido(ima) {
   if (!ima) return 0;
-  const politica = POLITICAS_APOYO.find(p => ima >= p.imaMin && ima <= p.imaMax);
-  return politica ? politica.montoPeso : 0;
+  if (ima < 0.85)  return 50;
+  if (ima <= 1.15) return 100;
+  if (ima <= 1.30) return 50;
+  return 0;
 }
 
 /** Costo de alimento mensual (MXN) por tipo y tamaño */
