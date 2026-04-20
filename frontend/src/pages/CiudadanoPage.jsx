@@ -10,44 +10,60 @@ const MAX_MASCOTAS = 3;
 
 /**
  * IMAGauge — Indicador visual en tiempo real del Índice de Masa Animal.
- * Posición del indicador: IMA 0 → 0%, IMA 1 → 50%, IMA 2 → 100%
- * @param {{ ima: number|null }} props
+ * Modificado para soportar 4 estados (Bajo peso, Peso ideal, Sobrepeso, Obeso) y mover el marcador dinámicamente.
  */
-function IMAGauge({ ima, clasificacion }) {
-  const pct = ima !== null ? Math.min(Math.max((ima / 2) * 100, 0), 100) : 50;
+function IMAGauge({ estadoCalculado }) {
+  let pct = 0;
+  let colorVar = 'var(--color-text)';
+
+  if (estadoCalculado === 'Bajo peso') {
+    pct = 12.5;
+    colorVar = '#90CAF9'; // Azul claro
+  } else if (estadoCalculado === 'Peso ideal') {
+    pct = 37.5;
+    colorVar = 'var(--color-success)';
+  } else if (estadoCalculado === 'Sobrepeso') {
+    pct = 62.5;
+    colorVar = 'var(--color-warning)';
+  } else if (estadoCalculado === 'Obeso') {
+    pct = 87.5;
+    colorVar = 'var(--color-danger)';
+  } else {
+    pct = 50; // Centro por defecto
+  }
+
   return (
     <div id="ima-gauge" className="ima-gauge-container animate-fade-in">
       <div className="ima-gauge-title">📊 Índice de Masa Animal (IMA)</div>
+      
       <div
-        className={`ima-value ${clasificacion?.clase || ''}`}
+        className={`ima-value`}
+        style={{ fontWeight: 800, fontSize: '1.4rem', color: colorVar, margin: '0.5rem 0', transition: 'color 0.3s ease' }}
         aria-live="polite"
-        aria-label={`IMA: ${ima ?? '—'}`}
       >
-        {ima !== null ? ima.toFixed(2) : '—'}
+        {estadoCalculado || '—'}
       </div>
-      <div className="ima-bar-track" role="img" aria-label="Barra de IMA">
-        <div className="ima-bar-indicator" style={{ left: `${pct}%` }} />
+
+      <div className="ima-bar-track" role="img" aria-label="Barra de IMA" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Fondo de 4 colores para la barra */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '25%', height: '100%', background: '#90CAF9', opacity: 0.3 }} />
+        <div style={{ position: 'absolute', top: 0, left: '25%', width: '25%', height: '100%', background: 'var(--color-success)', opacity: 0.3 }} />
+        <div style={{ position: 'absolute', top: 0, left: '50%', width: '25%', height: '100%', background: 'var(--color-warning)', opacity: 0.3 }} />
+        <div style={{ position: 'absolute', top: 0, left: '75%', width: '25%', height: '100%', background: 'var(--color-danger)', opacity: 0.3 }} />
+        
+        <div className="ima-bar-indicator" style={{ 
+          left: `${pct}%`, 
+          background: colorVar,
+          transition: 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease' 
+        }} />
       </div>
-      <div className="ima-labels">
+
+      <div className="ima-labels" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', textAlign: 'center', fontSize: '0.72rem', marginTop: '0.5rem' }}>
         <span>Bajo peso</span>
-        <span>Ideal</span>
+        <span>Peso ideal</span>
         <span>Sobrepeso</span>
+        <span>Obeso</span>
       </div>
-      {clasificacion && (
-        <div className="ima-badge">
-          <span className={`badge badge-${
-            clasificacion.clase === 'healthy'     ? 'success'
-            : clasificacion.clase === 'overweight' ? 'warning'
-            : clasificacion.clase === 'obese'      ? 'danger'
-            : 'info'
-          }`}>
-            {clasificacion.label}
-          </span>
-          <p style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', marginTop: 6 }}>
-            {clasificacion.descripcion}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -100,6 +116,7 @@ export default function CiudadanoPage({ session }) {
   const [ima, setIMA] = useState(null);
   const [clasificacion, setClasificacion] = useState(null);
   const [montoPrevisto, setMontoPrevisto] = useState(0);
+  const [estadoCalculado, setEstadoCalculado] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [formErrors, setFormErrors] = useState({});
@@ -154,6 +171,30 @@ export default function CiudadanoPage({ session }) {
     };
     recalcular();
   }, [form.razaId, form.tamanoId, form.pesoActual]);
+
+  // useEffect para el cálculo dinámico en el Frontend (Mock temporal según instrucciones)
+  useEffect(() => {
+    if (form.razaId && form.pesoActual) {
+      const mockPesosIdeales = {
+        4: { peso_min: 2, peso_max: 3 }, // Chihuahua
+        11: { peso_min: 3, peso_max: 5 }, // Siamés
+      };
+      const peso = Number(form.pesoActual);
+      const limites = mockPesosIdeales[form.razaId] || { peso_min: 5, peso_max: 10 }; // Fallback para otras razas
+      
+      if (peso < limites.peso_min) {
+        setEstadoCalculado('Bajo peso');
+      } else if (peso <= limites.peso_max) {
+        setEstadoCalculado('Peso ideal');
+      } else if (peso <= limites.peso_max * 1.20) {
+        setEstadoCalculado('Sobrepeso');
+      } else {
+        setEstadoCalculado('Obeso');
+      }
+    } else {
+      setEstadoCalculado(null);
+    }
+  }, [form.razaId, form.pesoActual]);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -539,7 +580,7 @@ export default function CiudadanoPage({ session }) {
 
             {/* Panel lateral IMA */}
             <div style={{ position: 'sticky', top: 'calc(var(--navbar-height) + 2rem)' }}>
-              <IMAGauge ima={ima} clasificacion={clasificacion} />
+              <IMAGauge estadoCalculado={estadoCalculado} />
               {montoPrevisto > 0 && (
                 <div id="monto-previsto" style={{
                   marginTop: '1rem',

@@ -59,6 +59,7 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:password123@db:5432/mascotas_db
       - PORT=3000
+      - JWT_SECRET=mascotas_jwt_secret_2024
       - NODE_ENV=development
     expose:
       - "3000"
@@ -79,6 +80,7 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:password123@db:5432/mascotas_db
       - PORT=3000
+      - JWT_SECRET=mascotas_jwt_secret_2024
       - NODE_ENV=development
     expose:
       - "3000"
@@ -99,6 +101,7 @@ services:
     environment:
       - DATABASE_URL=postgres://admin:password123@db:5432/mascotas_db
       - PORT=3000
+      - JWT_SECRET=mascotas_jwt_secret_2024
       - NODE_ENV=development
     expose:
       - "3000"
