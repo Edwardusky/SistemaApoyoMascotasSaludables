@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSolicitudes, actualizarEstadoSolicitud } from '../services/api.service.js';
+import { getSolicitudes, actualizarEstadoSolicitud, getPoliticasApoyo, getCostosAlimento, updatePoliticaApoyo, updateCostoAlimento } from '../services/api.service.js';
 import { ESTADOS } from '../mocks/solicitudes.mock.js';
 
 /** Badge de estado de solicitud */
@@ -210,11 +210,51 @@ export default function AutoridadPage() {
   const [modal, setModal] = useState(null); // { solicitud, accion }
   const [procesando, setProcesando] = useState(false);
 
+  const [tab, setTab] = useState('solicitudes'); // 'solicitudes' | 'politicas' | 'costos'
+  const [politicas, setPoliticas] = useState([]);
+  const [costos, setCostos] = useState([]);
+  
+  // Modales de edición
+  const [editingPolitica, setEditingPolitica] = useState(null);
+  const [editingCosto, setEditingCosto] = useState(null);
+
   useEffect(() => {
-    getSolicitudes()
-      .then(setSolicitudes)
+    Promise.all([
+      getSolicitudes(),
+      getPoliticasApoyo(),
+      getCostosAlimento()
+    ])
+      .then(([sol, pol, cos]) => {
+        setSolicitudes(sol);
+        setPoliticas(pol);
+        setCostos(cos);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleUpdatePolitica = async (e) => {
+    e.preventDefault();
+    try {
+      const data = await updatePoliticaApoyo(editingPolitica.id, { montoPeso: editingPolitica.montoPeso, descripcion: editingPolitica.descripcion });
+      setPoliticas(prev => prev.map(p => p.id === data.id ? { ...p, montoPeso: Number(data.monto_apoyo_mxn), descripcion: data.descripcion } : p));
+      setEditingPolitica(null);
+      alert('Política actualizada correctamente');
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+
+  const handleUpdateCosto = async (e) => {
+    e.preventDefault();
+    try {
+      const data = await updateCostoAlimento(editingCosto.id, { costoMensual: editingCosto.costoMensual, precioKg: editingCosto.precioKg });
+      setCostos(prev => prev.map(c => c.id === data.id ? { ...c, costoMensual: Number(data.costo_mensual), precioKg: Number(data.precio_kg) } : c));
+      setEditingCosto(null);
+      alert('Costo actualizado correctamente');
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
 
   const handleAccion = (solicitud, accion) => setModal({ solicitud, accion });
 
@@ -247,9 +287,29 @@ export default function AutoridadPage() {
   return (
     <div id="autoridad-page" className="animate-fade-in">
       <div className="page-header">
-        <h1 className="page-title">🏛️ Bandeja de Autoridad</h1>
-        <p className="page-subtitle">Revisión y resolución de solicitudes de apoyo ciudadano</p>
+        <h1 className="page-title">🏛️ Panel de Autoridad</h1>
+        <p className="page-subtitle">Revisión de solicitudes y configuración de variables de apoyo</p>
       </div>
+
+      {/* Tabs de sección */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {[
+          { id: 'solicitudes', icon: '📥', label: 'Solicitudes Pendientes' },
+          { id: 'politicas',   icon: '📑', label: 'Políticas IMA' },
+          { id: 'costos',      icon: '💰', label: 'Precios Alimento' },
+        ].map(s => (
+          <button
+            key={s.id}
+            className={`btn ${tab === s.id ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setTab(s.id)}
+          >
+            {s.icon} {s.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'solicitudes' && (
+        <div id="tab-solicitudes" className="animate-fade-in">
 
       {/* Stats rápidas */}
       <div className="stats-grid">
@@ -347,14 +407,145 @@ export default function AutoridadPage() {
         </div>
       )}
 
-      {/* Modal de confirmación */}
-      {modal && (
-        <ConfirmModal
-          solicitud={modal.solicitud}
-          accion={modal.accion}
-          onConfirm={handleConfirm}
-          onCancel={() => !procesando && setModal(null)}
-        />
+          {modal && (
+            <ConfirmModal
+              solicitud={modal.solicitud}
+              accion={modal.accion}
+              onConfirm={handleConfirm}
+              onCancel={() => !procesando && setModal(null)}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── PESTAÑA: POLÍTICAS IMA ── */}
+      {tab === 'politicas' && (
+        <div id="tab-politicas" className="animate-fade-in">
+          <div className="card">
+            <div className="card__header">
+              <div className="card__title">📑 Tabla B — Políticas de Apoyo por IMA</div>
+              <div className="card__subtitle">Ajusta los porcentajes o montos base para la evaluación automática</div>
+            </div>
+            <div className="card__body">
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Clasificación IMA</th>
+                      <th>Rango</th>
+                      <th>Monto de apoyo (MXN)</th>
+                      <th>Descripción</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {politicas.map(p => (
+                      <tr key={p.id}>
+                        <td><span className="badge badge-info">{p.clasificacionIMA}</span></td>
+                        <td style={{ fontFamily: 'monospace' }}>{p.imaMin} - {p.imaMax === 9.99 ? '∞' : p.imaMax}</td>
+                        <td style={{ fontWeight: 'bold' }}>${p.montoPeso.toLocaleString()} MXN</td>
+                        <td>{p.descripcion}</td>
+                        <td>
+                          <button className="btn btn-outline btn-sm" onClick={() => setEditingPolitica({ ...p })}>
+                            ✏️ Editar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PESTAÑA: COSTOS DE ALIMENTO ── */}
+      {tab === 'costos' && (
+        <div id="tab-costos" className="animate-fade-in">
+          <div className="card">
+            <div className="card__header">
+              <div className="card__title">💰 Tabla de Costos de Alimento</div>
+              <div className="card__subtitle">Configura el costo mensual base y el precio por kg de alimento</div>
+            </div>
+            <div className="card__body">
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tipo y Tamaño</th>
+                      <th>Costo Mensual (MXN)</th>
+                      <th>Precio por Kg (MXN)</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {costos.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.tipoNombre === 'Perro' ? '🐕' : '🐈'} {c.tipoNombre} - {c.tamanoNombre}</td>
+                        <td style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>${c.costoMensual.toLocaleString()} MXN</td>
+                        <td style={{ fontWeight: 'bold' }}>${c.precioKg.toLocaleString()} MXN / Kg</td>
+                        <td>
+                          <button className="btn btn-outline btn-sm" onClick={() => setEditingCosto({ ...c })}>
+                            ✏️ Editar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edición de Política */}
+      {editingPolitica && (
+        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ background: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-md)', width: '90%', maxWidth: '400px' }}>
+            <h2>Editar Política IMA</h2>
+            <p style={{ marginBottom: '1rem', color: 'var(--color-text-muted)' }}>{editingPolitica.clasificacionIMA}</p>
+            <form onSubmit={handleUpdatePolitica} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Monto de apoyo (MXN o Porcentaje)</label>
+                <input type="number" className="form-input" value={editingPolitica.montoPeso} onChange={e => setEditingPolitica({...editingPolitica, montoPeso: Number(e.target.value)})} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Descripción</label>
+                <textarea className="form-input" value={editingPolitica.descripcion} onChange={e => setEditingPolitica({...editingPolitica, descripcion: e.target.value})} required rows={3}></textarea>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setEditingPolitica(null)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary">Guardar Cambios</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edición de Costo de Alimento */}
+      {editingCosto && (
+        <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ background: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-md)', width: '90%', maxWidth: '400px' }}>
+            <h2>Editar Costo de Alimento</h2>
+            <p style={{ marginBottom: '1rem', color: 'var(--color-text-muted)' }}>{editingCosto.tipoNombre} - {editingCosto.tamanoNombre}</p>
+            <form onSubmit={handleUpdateCosto} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Costo Mensual Base (MXN)</label>
+                <input type="number" className="form-input" value={editingCosto.costoMensual} onChange={e => setEditingCosto({...editingCosto, costoMensual: Number(e.target.value)})} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Precio por Kg (MXN)</label>
+                <input type="number" step="0.01" className="form-input" value={editingCosto.precioKg} onChange={e => setEditingCosto({...editingCosto, precioKg: Number(e.target.value)})} required />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setEditingCosto(null)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary">Guardar Cambios</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

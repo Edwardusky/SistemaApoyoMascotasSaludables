@@ -101,8 +101,8 @@ export default function CiudadanoPage({ session }) {
   const [form, setForm] = useState({
     // Datos dueño
     nombre: session?.nombre || '',
-    telefono: '',
-    email: '',
+    telefono: session?.telefono || '',
+    email: session?.email || '',
     // Datos mascota
     mascotaNombre: '',
     tipoId: '',
@@ -242,10 +242,12 @@ export default function CiudadanoPage({ session }) {
     return errors;
   };
 
-  // Filtrado de tamaños según tipo (Gato solo 3 y 4)
+  // Filtrado de tamaños según tipo:
+  // Gatos: Pequeño (id=2) y Mediano (id=3) — según bd_catalogos.PesoIdeal real
+  // Perros: Todos (Mini=1, Pequeño=2, Mediano=3, Grande=4, Gigante=5)
   const tamanosFiltrados = tamanos.filter(t => {
     if (!form.tipoId) return true;
-    if (form.tipoId === '2') return t.id === 3 || t.id === 4; // Gato: Mediano, Grande
+    if (form.tipoId === '2') return t.id === 2 || t.id === 3; // Gato: Pequeño, Mediano
     return true; // Perro: Todos
   });
 
@@ -262,6 +264,10 @@ export default function CiudadanoPage({ session }) {
       const razaObj  = razas.find(r => r.id === Number(form.razaId));
       const tamObj   = tamanos.find(t => t.id === Number(form.tamanoId));
 
+      const pesoIdealKg = pesoIdeal?.pesoIdeal ?? null;
+      const imaFinal    = ima;
+      const montoCalc   = calcularMontoSugeridoService(imaFinal);
+
       const payload = {
         dueno: {
           nombre: form.nombre.trim(),
@@ -275,11 +281,11 @@ export default function CiudadanoPage({ session }) {
           razaId: Number(form.razaId),     razaNombre: razaObj?.nombre,
           tamanoId: Number(form.tamanoId), tamanoNombre: tamObj?.nombre,
           pesoActualKg: Number(form.pesoActual),
-          pesoIdealKg: pesoIdeal?.pesoIdeal || null,
-          ima,
+          pesoIdealKg,
+          ima: imaFinal,
           clasificacionIMA: clasificacion?.label || null,
           certificadoVeterinario: form.certificadoNombre || null,
-          montoSugerido: calcularMontoSugeridoService(ima),
+          montoSugerido: montoCalc,
         },
       };
 

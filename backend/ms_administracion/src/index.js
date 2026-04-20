@@ -39,9 +39,9 @@ function verificarJWT(req, res, next) {
   }
 }
 
-function soloAdmin(req, res, next) {
-  if (req.usuario?.rol !== 'admin')
-    return res.status(403).json({ error: 'Solo el Administrador puede realizar esta acción' });
+function adminOAutoridad(req, res, next) {
+  if (req.usuario?.rol !== 'admin' && req.usuario?.rol !== 'autoridad')
+    return res.status(403).json({ error: 'Solo Administrador o Autoridad pueden realizar esta acción' });
   next();
 }
 
@@ -65,18 +65,20 @@ app.get('/politicas', async (req, res) => {
   }
 });
 
-// PUT /politicas/:id — Actualizar monto de política (solo admin)
-app.put('/politicas/:id', verificarJWT, soloAdmin, async (req, res) => {
+// PATCH /politicas/:id — Actualizar monto de política
+app.patch('/politicas/:id', verificarJWT, adminOAutoridad, async (req, res) => {
   const { monto_apoyo_mxn, descripcion } = req.body;
-  if (monto_apoyo_mxn === undefined)
-    return res.status(400).json({ error: 'monto_apoyo_mxn es requerido' });
+  if (monto_apoyo_mxn === undefined && descripcion === undefined)
+    return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
   try {
     const r = await pool.query(
       `UPDATE bd_catalogos.PoliticaApoyo
-       SET monto_apoyo_mxn = $1, descripcion = COALESCE($2, descripcion), updated_at = NOW()
+       SET monto_apoyo_mxn = COALESCE($1, monto_apoyo_mxn),
+           descripcion = COALESCE($2, descripcion),
+           updated_at = NOW()
        WHERE id = $3
        RETURNING *`,
-      [monto_apoyo_mxn, descripcion || null, req.params.id]
+      [monto_apoyo_mxn, descripcion, req.params.id]
     );
     if (r.rows.length === 0) return res.status(404).json({ error: 'Política no encontrada' });
     res.json(r.rows[0]);
@@ -90,7 +92,7 @@ app.get('/costos-alimento', async (req, res) => {
   try {
     const r = await pool.query(
       `SELECT ca.id, t.nombre as tipo_nombre, s.nombre as tamano_nombre,
-              ca.costo_mensual, ca.moneda
+              ca.costo_mensual, ca.precio_kg, ca.moneda
        FROM bd_catalogos.CostoAlimento ca
        JOIN bd_catalogos.TipoMascota t ON t.id = ca.tipo_id
        JOIN bd_catalogos.Tamano s ON s.id = ca.tamano_id
@@ -102,16 +104,19 @@ app.get('/costos-alimento', async (req, res) => {
   }
 });
 
-// PUT /costos-alimento/:id (solo admin)
-app.put('/costos-alimento/:id', verificarJWT, soloAdmin, async (req, res) => {
-  const { costo_mensual } = req.body;
-  if (!costo_mensual) return res.status(400).json({ error: 'costo_mensual es requerido' });
+// PATCH /costos-alimento/:id
+app.patch('/costos-alimento/:id', verificarJWT, adminOAutoridad, async (req, res) => {
+  const { costo_mensual, precio_kg } = req.body;
+  if (costo_mensual === undefined && precio_kg === undefined)
+    return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
   try {
     const r = await pool.query(
       `UPDATE bd_catalogos.CostoAlimento
-       SET costo_mensual = $1, updated_at = NOW()
-       WHERE id = $2 RETURNING *`,
-      [costo_mensual, req.params.id]
+       SET costo_mensual = COALESCE($1, costo_mensual),
+           precio_kg = COALESCE($2, precio_kg),
+           updated_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [costo_mensual, precio_kg, req.params.id]
     );
     if (r.rows.length === 0) return res.status(404).json({ error: 'Registro no encontrado' });
     res.json(r.rows[0]);

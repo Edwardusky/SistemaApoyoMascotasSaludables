@@ -401,6 +401,7 @@ export default function AdminPage() {
               <input className="input" placeholder="Teléfono" value={userForm.telefono} onChange={e => setUserForm({...userForm, telefono: e.target.value})} />
               <select className="input" value={userForm.rol} onChange={e => setUserForm({...userForm, rol: e.target.value})}>
                 <option value="ciudadano">Ciudadano</option>
+                <option value="autoridad">Autoridad</option>
                 <option value="admin">Administrador</option>
               </select>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

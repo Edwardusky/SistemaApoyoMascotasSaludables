@@ -80,47 +80,72 @@ export const POLITICAS_APOYO = [
 ];
 
 // Peso ideal de referencia (kg): clave = `${razaId}-${tamanoId}`
+// Claves sincronizadas con bd_catalogos.PesoIdeal (raza_id, tamano_id)
 export const PESOS_IDEALES = {
-  // Labrador Retriever
+  // Labrador Retriever (perro Grande=4)
   '1-4': { pesoIdeal: 32, pesoMinKg: 27, pesoMaxKg: 36 },
-  // Pastor Alemán
+  // Pastor Alemán (Grande=4)
   '2-4': { pesoIdeal: 35, pesoMinKg: 30, pesoMaxKg: 40 },
-  // Bulldog Francés
+  // Bulldog Francés (Pequeño=2)
   '3-2': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 13 },
-  // Chihuahua
+  // Chihuahua (Mini=1)
   '4-1': { pesoIdeal: 2.5, pesoMinKg: 1.5, pesoMaxKg: 3.5 },
-  // Golden Retriever
+  // Golden Retriever (Grande=4)
   '5-4': { pesoIdeal: 34, pesoMinKg: 29, pesoMaxKg: 38 },
-  // Poodle
-  '6-2': { pesoIdeal: 7,  pesoMinKg: 6,  pesoMaxKg: 9  },
-  // Beagle
-  '7-3': { pesoIdeal: 13, pesoMinKg: 10, pesoMaxKg: 16 },
-  // Yorkshire
+  // Poodle (Mini=1)
+  '6-1': { pesoIdeal: 3,  pesoMinKg: 2,  pesoMaxKg: 4  },
+  // Beagle (Pequeño=2)
+  '7-2': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 11 },
+  // Yorkshire (Mini=1)
   '8-1': { pesoIdeal: 2.5, pesoMinKg: 2, pesoMaxKg: 3.5 },
-  // Dóberman
+  // Dóberman (Grande=4)
   '9-4': { pesoIdeal: 35, pesoMinKg: 30, pesoMaxKg: 40 },
-  // Mestizo Perro
+  // Mestizo Perro (Mediano=3)
   '10-3': { pesoIdeal: 16, pesoMinKg: 12, pesoMaxKg: 22 },
-  // Siamés (Gato - Mediano)
-  '11-3': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
-  // Persa (Gato - Mediano)
-  '12-3': { pesoIdeal: 5,  pesoMinKg: 3,  pesoMaxKg: 7  },
-  // Maine Coon (Gato - Grande)
-  '13-4': { pesoIdeal: 10, pesoMinKg: 8,  pesoMaxKg: 12 },
-  // Bengalí (Gato - Mediano)
-  '14-3': { pesoIdeal: 6,  pesoMinKg: 4,  pesoMaxKg: 8  },
-  // Ragdoll (Gato - Grande)
-  '15-4': { pesoIdeal: 9,  pesoMinKg: 7,  pesoMaxKg: 11 },
-  // Sphynx (Gato - Mediano)
-  '16-3': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
-  // Doméstico Gato (Gato - Mediano)
-  '17-3': { pesoIdeal: 5,  pesoMinKg: 4,  pesoMaxKg: 6  },
+  // Siamés (Gato - Pequeño=2, según BD)
+  '11-2': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
+  // Persa (Gato - Pequeño=2)
+  '12-2': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
+  // Maine Coon (Gato - Mediano=3)
+  '13-3': { pesoIdeal: 7,  pesoMinKg: 5,  pesoMaxKg: 9  },
+  // Bengêlí (Gato - Pequeño=2)
+  '14-2': { pesoIdeal: 5,  pesoMinKg: 4,  pesoMaxKg: 7  },
+  // Ragdoll (Gato - Mediano=3)
+  '15-3': { pesoIdeal: 8,  pesoMinKg: 6,  pesoMaxKg: 10 },
+  // Sphynx (Gato - Pequeño=2)
+  '16-2': { pesoIdeal: 4,  pesoMinKg: 3,  pesoMaxKg: 6  },
+  // Doméstico Gato (Gato - Pequeño=2)
+  '17-2': { pesoIdeal: 4.5, pesoMinKg: 3.5, pesoMaxKg: 5.5 },
 };
 
-/** Mapeo de asignación automática de raza a tamaño fijo */
+/**
+ * Mapeo de asignación automática de raza a tamaño fijo.
+ * Fuente de verdad: bd_catalogos.PesoIdeal (SELECT raza_id, tamano_id ...)
+ * Perros: 1=Lab(4), 2=Pastor(4), 3=Bulldog(2), 4=Chihuahua(1), 5=Golden(4),
+ *         6=Poodle(1 ó 2), 7=Beagle(2), 8=Yorkshire(1), 9=Dóberman(4), 10=Mestizo(3)
+ * Gatos:  11=Siamés(2), 12=Persa(2), 13=Maine Coon(3), 14=Beng(2), 15=Ragdoll(3),
+ *         16=Sphynx(2), 17=Doméstico(2)
+ */
 export const RAZA_TAMANO_MAPPING = {
-  1: 4, 2: 4, 3: 2, 4: 1, 5: 4, 6: 2, 7: 3, 8: 1, 9: 4, 10: 3, // Perros
-  11: 3, 12: 3, 13: 4, 14: 3, 15: 4, 16: 3, 17: 3              // Gatos
+  // Perros
+  1: 4, // Labrador Retriever → Grande
+  2: 4, // Pastor Alemán → Grande
+  3: 2, // Bulldog Francés → Pequeño
+  4: 1, // Chihuahua → Mini / Toy
+  5: 4, // Golden Retriever → Grande
+  6: 1, // Poodle → Mini / Toy (según init.sql: raza_id=6, tamano_id=1)
+  7: 2, // Beagle → Pequeño
+  8: 1, // Yorkshire Terrier → Mini / Toy
+  9: 4, // Dóberman → Grande
+  10: 3, // Mestizo Perro → Mediano
+  // Gatos (según init.sql real: todos usan tamano_id=2 excepto Maine Coon y Ragdoll)
+  11: 2, // Siamés → Pequeño
+  12: 2, // Persa → Pequeño
+  13: 3, // Maine Coon → Mediano
+  14: 2, // Bengêlí → Pequeño
+  15: 3, // Ragdoll → Mediano
+  16: 2, // Sphynx → Pequeño
+  17: 2, // Doméstico / Mestizo → Pequeño
 };
 
 /** Obtiene el peso ideal dado una raza y tamaño */

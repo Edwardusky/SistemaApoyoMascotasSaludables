@@ -57,14 +57,24 @@ export async function getTamanos() {
   return apiFetch(`${API_BASE_URL}/evaluacion/catalogos/tamanos`);
 }
 
-/** GET /api/evaluacion/catalogos/peso-ideal?razaId=X&tamanoId=Y */
+/** GET /api/evaluacion/catalogos/peso-ideal?razaId=X&tamanoId=Y
+ * Normaliza la respuesta del backend (snake_case) al formato camelCase
+ * que usa CiudadanoPage: { pesoIdeal, pesoMinKg, pesoMaxKg }
+ */
 export async function getPesoIdealService(razaId, tamanoId) {
   try {
-    return await apiFetch(
+    const data = await apiFetch(
       `${API_BASE_URL}/evaluacion/catalogos/peso-ideal?razaId=${razaId}&tamanoId=${tamanoId}`
     );
+    // El backend retorna { peso_ideal_kg, peso_min_kg, peso_max_kg }
+    // CiudadanoPage espera { pesoIdeal, pesoMinKg, pesoMaxKg }
+    return {
+      pesoIdeal: parseFloat(data.peso_ideal_kg),
+      pesoMinKg: parseFloat(data.peso_min_kg),
+      pesoMaxKg: parseFloat(data.peso_max_kg),
+    };
   } catch {
-    return null; // Combinación no encontrada
+    return null; // Combinación raza/tamaño no encontrada
   }
 }
 
@@ -188,8 +198,33 @@ export async function getCostosAlimento() {
     ...c,
     tipoNombre: c.tipo_nombre,
     tamanoNombre: c.tamano_nombre,
-    costoMensual: Number(c.costo_mensual) || 0
+    costoMensual: Number(c.costo_mensual) || 0,
+    precioKg: Number(c.precio_kg) || 0
   }));
+}
+
+/** PATCH /api/admin/politicas/:id */
+export async function updatePoliticaApoyo(id, datos) {
+  return apiFetch(`${API_BASE_URL}/admin/politicas/${id}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      monto_apoyo_mxn: datos.montoPeso !== undefined ? datos.montoPeso : undefined,
+      descripcion: datos.descripcion
+    })
+  });
+}
+
+/** PATCH /api/admin/costos-alimento/:id */
+export async function updateCostoAlimento(id, datos) {
+  return apiFetch(`${API_BASE_URL}/admin/costos-alimento/${id}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      costo_mensual: datos.costoMensual !== undefined ? datos.costoMensual : undefined,
+      precio_kg: datos.precioKg !== undefined ? datos.precioKg : undefined
+    })
+  });
 }
 
 /** GET /api/admin/metricas */

@@ -254,13 +254,34 @@ app.put('/admin/usuarios/:id', verificarJWT, verificarAdmin, async (req, res) =>
 // DELETE /admin/usuarios/:id
 app.delete('/admin/usuarios/:id', verificarJWT, verificarAdmin, async (req, res) => {
   const { id } = req.params;
+  const client = await pool.connect();
   try {
-    const result = await pool.query(`DELETE FROM bd_transaccional.Usuario WHERE id = $1 RETURNING id`, [id]);
+    await client.query('BEGIN');
+    
+    // 1. Eliminar solicitudes de apoyo (donde es ciudadano solicitante o autoridad revisora)
+    // Esto evita el error de llave foránea, ya que SolicitudApoyo no tiene ON DELETE CASCADE.
+    await client.query(
+      `DELETE FROM bd_transaccional.SolicitudApoyo WHERE usuario_id = $1 OR revisado_por = $1`,
+      [id]
+    );
+
+    // 2. Eliminar al usuario (las Direcciones y Mascotas asociadas se eliminan solas 
+    // por la restricción ON DELETE CASCADE en la BD).
+    const result = await client.query(
+      `DELETE FROM bd_transaccional.Usuario WHERE id = $1 RETURNING id`, 
+      [id]
+    );
+    
+    await client.query('COMMIT');
+    
     if (result.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
-    res.json({ message: 'Usuario eliminado correctamente' });
+    res.json({ message: 'Usuario eliminado correctamente (y todas sus dependencias)' });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('[ms_usuarios] DELETE /admin/usuarios error:', err.message);
-    res.status(500).json({ error: 'No se pudo eliminar el usuario (podría tener dependencias)' });
+    res.status(500).json({ error: 'No se pudo eliminar el usuario debido a dependencias o error interno.' });
+  } finally {
+    client.release();
   }
 });
 

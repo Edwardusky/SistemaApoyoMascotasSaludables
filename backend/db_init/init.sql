@@ -220,6 +220,9 @@ INSERT INTO bd_catalogos.PesoIdeal (raza_id, tamano_id, peso_min_kg, peso_max_kg
     (11, 2, 3.5, 5.5, 4.5),-- Siamés / Pequeño
     (12, 2, 3,  6,  4),   -- Persa / Pequeño
     (13, 3, 5,  9,  7),   -- Maine Coon / Mediano
+    (14, 2, 4,  7,  5),   -- Bengalí / Pequeño
+    (15, 3, 6,  10, 8),   -- Ragdoll / Mediano
+    (16, 2, 3,  6,  4),   -- Sphynx / Pequeño
     (17, 2, 3.5, 5.5, 4.5);-- Doméstico / Pequeño
 
 -- PoliticaApoyo (Tabla B del SRS)
