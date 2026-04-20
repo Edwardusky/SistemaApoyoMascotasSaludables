@@ -88,21 +88,73 @@ export function calcularMontoSugeridoService(ima) {
 
 /** GET /api/solicitudes/ — Listar (rol filtra en backend) */
 export async function getSolicitudes() {
-  return apiFetch(`${API_BASE_URL}/solicitudes/`, { headers: authHeaders() });
+  const data = await apiFetch(`${API_BASE_URL}/solicitudes/`, { headers: authHeaders() });
+  return data.map(mapSolicitudToFrontend);
 }
 
 /** GET /api/solicitudes/ — Solicitudes del ciudadano autenticado */
 export async function getMisSolicitudes() {
-  return apiFetch(`${API_BASE_URL}/solicitudes/`, { headers: authHeaders() });
+  const data = await apiFetch(`${API_BASE_URL}/solicitudes/`, { headers: authHeaders() });
+  return data.map(mapSolicitudToFrontend);
+}
+
+function mapSolicitudToFrontend(sol) {
+  return {
+    ...sol,
+    id: sol.id,
+    fechaCreacion: sol.created_at,
+    estado: sol.estado,
+    montoSugerido: Number(sol.monto_sugerido_mxn) || 0,
+    comentarioAutoridad: sol.comentario_autoridad,
+    certificadoVeterinario: sol.certificado_vet_path,
+    mascota: {
+      nombre: sol.mascota_nombre || 'Mascota',
+      tipoNombre: sol.tipo_nombre || 'Desconocido',
+      razaNombre: sol.raza_nombre || 'Desconocido',
+      tamanoNombre: sol.tamano_nombre || 'Desconocido',
+      pesoActualKg: Number(sol.peso_actual_kg),
+      pesoIdealKg: Number(sol.peso_ideal_kg),
+      ima: Number(sol.ima_calculado),
+      clasificacionIMA: sol.clasificacion_ima
+    },
+    dueno: {
+      nombre: sol.dueno_nombre,
+      curp: sol.curp
+    }
+  };
 }
 
 /** POST /api/solicitudes/ — Crear nueva solicitud */
 export async function crearSolicitud(datos) {
-  return apiFetch(`${API_BASE_URL}/solicitudes/`, {
+  const row = await apiFetch(`${API_BASE_URL}/solicitudes/`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(datos),
   });
+
+  return {
+    ...row,
+    id: row.id,
+    fechaCreacion: row.created_at,
+    estado: row.estado,
+    montoSugerido: Number(row.monto_sugerido_mxn) || 0,
+    comentarioAutoridad: row.comentario_autoridad,
+    certificadoVeterinario: row.certificado_vet_path,
+    mascota: {
+      nombre: datos.mascota.nombre,
+      tipoNombre: datos.mascota.tipoNombre,
+      razaNombre: datos.mascota.razaNombre,
+      tamanoNombre: datos.mascota.tamanoNombre,
+      pesoActualKg: Number(row.peso_actual_kg),
+      pesoIdealKg: Number(row.peso_ideal_kg),
+      ima: Number(row.ima_calculado),
+      clasificacionIMA: row.clasificacion_ima
+    },
+    dueno: {
+      nombre: datos.dueno.nombre,
+      curp: datos.dueno.curp
+    }
+  };
 }
 
 /** PATCH /api/solicitudes/:id — Aprobar o Rechazar */
@@ -118,17 +170,39 @@ export async function actualizarEstadoSolicitud(id, estado, comentario_autoridad
 
 /** GET /api/admin/politicas */
 export async function getPoliticasApoyo() {
-  return apiFetch(`${API_BASE_URL}/admin/politicas`);
+  const data = await apiFetch(`${API_BASE_URL}/admin/politicas`);
+  return data.map(p => ({
+    ...p,
+    clasificacionIMA: p.clasificacion_ima,
+    imaMin: Number(p.ima_min),
+    imaMax: Number(p.ima_max),
+    montoPeso: Number(p.monto_apoyo_mxn) || 0,
+    descripcion: p.descripcion
+  }));
 }
 
 /** GET /api/admin/costos-alimento */
 export async function getCostosAlimento() {
-  return apiFetch(`${API_BASE_URL}/admin/costos-alimento`);
+  const data = await apiFetch(`${API_BASE_URL}/admin/costos-alimento`);
+  return data.map(c => ({
+    ...c,
+    tipoNombre: c.tipo_nombre,
+    tamanoNombre: c.tamano_nombre,
+    costoMensual: Number(c.costo_mensual) || 0
+  }));
 }
 
 /** GET /api/admin/metricas */
 export async function getMetricas() {
-  return apiFetch(`${API_BASE_URL}/admin/metricas`, { headers: authHeaders() });
+  const data = await apiFetch(`${API_BASE_URL}/admin/metricas`, { headers: authHeaders() });
+  return {
+    total: Number(data.total) || 0,
+    pendientes: Number(data.pendientes) || 0,
+    enRevision: Number(data.en_revision) || 0,
+    aprobadas: Number(data.aprobadas) || 0,
+    rechazadas: Number(data.rechazadas) || 0,
+    montoTotal: Number(data.monto_total_aprobado) || 0
+  };
 }
 
 // ─── AUTH (ms_usuarios) ──────────────────────────────────────────────────────
@@ -180,5 +254,19 @@ export function getSession() {
 }
 
 export function getToken() {
-  return sessionStorage.getItem('token') || '';
+  let token = sessionStorage.getItem('token') || '';
+  
+  // Limpieza absoluta de formato
+  try {
+    const parsed = JSON.parse(token);
+    if (parsed && parsed.token) token = parsed.token;
+    else if (typeof parsed === 'string') token = parsed;
+  } catch (e) {} // Ignorar si no es JSON
+  
+  // Remover prefijo si se guardó por error
+  if (token.toLowerCase().startsWith('bearer ')) {
+    token = token.substring(7);
+  }
+  
+  return token.trim();
 }

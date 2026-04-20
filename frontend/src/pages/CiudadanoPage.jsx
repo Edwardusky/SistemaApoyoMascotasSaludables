@@ -279,6 +279,7 @@ export default function CiudadanoPage({ session }) {
           ima,
           clasificacionIMA: clasificacion?.label || null,
           certificadoVeterinario: form.certificadoNombre || null,
+          montoSugerido: calcularMontoSugeridoService(ima),
         },
       };
 

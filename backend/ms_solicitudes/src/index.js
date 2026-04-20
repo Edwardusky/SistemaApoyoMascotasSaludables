@@ -36,7 +36,7 @@ function verificarJWT(req, res, next) {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Token requerido' });
   try {
-    req.usuario = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    req.usuario = jwt.verify(token, process.env.JWT_SECRET || 'mascotas_jwt_secret_2024');
     next();
   } catch {
     res.status(401).json({ error: 'Token inválido' });
@@ -66,11 +66,14 @@ app.get('/', verificarJWT, async (req, res) => {
       // El ciudadano solo ve sus propias solicitudes
       query = `
         SELECT s.*, u.nombre as dueno_nombre, u.curp,
-               m.nombre as mascota_nombre, t.nombre as tipo_nombre
+               m.nombre as mascota_nombre, t.nombre as tipo_nombre,
+               rm.nombre as raza_nombre, tm.nombre as tamano_nombre
         FROM bd_transaccional.SolicitudApoyo s
         JOIN bd_transaccional.Usuario u ON u.id = s.usuario_id
         JOIN bd_transaccional.Mascota m ON m.id = s.mascota_id
         JOIN bd_catalogos.TipoMascota t ON t.id = m.tipo_id
+        JOIN bd_catalogos.RazaMascota rm ON rm.id = m.raza_id
+        JOIN bd_catalogos.Tamano tm ON tm.id = m.tamano_id
         WHERE s.usuario_id = $1
         ORDER BY s.created_at DESC`;
       params = [req.usuario.id];
@@ -78,11 +81,14 @@ app.get('/', verificarJWT, async (req, res) => {
       // Autoridad y Admin ven todas
       query = `
         SELECT s.*, u.nombre as dueno_nombre, u.curp,
-               m.nombre as mascota_nombre, t.nombre as tipo_nombre
+               m.nombre as mascota_nombre, t.nombre as tipo_nombre,
+               rm.nombre as raza_nombre, tm.nombre as tamano_nombre
         FROM bd_transaccional.SolicitudApoyo s
         JOIN bd_transaccional.Usuario u ON u.id = s.usuario_id
         JOIN bd_transaccional.Mascota m ON m.id = s.mascota_id
         JOIN bd_catalogos.TipoMascota t ON t.id = m.tipo_id
+        JOIN bd_catalogos.RazaMascota rm ON rm.id = m.raza_id
+        JOIN bd_catalogos.Tamano tm ON tm.id = m.tamano_id
         ORDER BY s.created_at DESC`;
       params = [];
     }
@@ -97,14 +103,17 @@ app.get('/', verificarJWT, async (req, res) => {
 // POST / — Crear nueva solicitud
 // CA-03: Valida que el ciudadano no tenga más de 3 solicitudes activas
 app.post('/', verificarJWT, soloRol('ciudadano'), async (req, res) => {
-  const { mascota_id, peso_actual_kg, peso_ideal_kg, ima_calculado,
-          clasificacion_ima, monto_sugerido_mxn, certificado_vet_path } = req.body;
+  const payload = req.body;
+  let finalMascotaId = payload.mascota_id;
+  let mInfo = payload.mascota || {};
+  let pesoActual = payload.peso_actual_kg || mInfo.pesoActualKg;
 
-  if (!mascota_id || !peso_actual_kg)
-    return res.status(400).json({ error: 'mascota_id y peso_actual_kg son requeridos' });
+  if (!finalMascotaId && !mInfo.nombre) {
+    return res.status(400).json({ error: 'mascota_id o datos de mascota son requeridos' });
+  }
 
   try {
-    // CA-03: Verificar límite de 3 mascotas
+    // CA-03: Verificar límite de 3 solicitudes/mascotas
     const countResult = await pool.query(
       `SELECT COUNT(*) FROM bd_transaccional.SolicitudApoyo
        WHERE usuario_id = $1 AND estado NOT IN ('RECHAZADO')`,
@@ -115,15 +124,31 @@ app.post('/', verificarJWT, soloRol('ciudadano'), async (req, res) => {
         error: 'Límite alcanzado: máximo 3 solicitudes activas por ciudadano (CA-03)',
       });
 
+    // Si viene objeto mascota, crearlo primero
+    if (!finalMascotaId && mInfo.nombre) {
+      const mascResult = await pool.query(
+        `INSERT INTO bd_transaccional.Mascota
+           (usuario_id, tipo_id, raza_id, tamano_id, nombre, peso_actual_kg)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [req.usuario.id, mInfo.tipoId, mInfo.razaId, mInfo.tamanoId, mInfo.nombre, pesoActual]
+      );
+      finalMascotaId = mascResult.rows[0].id;
+    }
+
+    const pesoIdeal = payload.peso_ideal_kg || mInfo.pesoIdealKg || null;
+    const ima = payload.ima_calculado || mInfo.ima || null;
+    const clasificacion = payload.clasificacion_ima || mInfo.clasificacionIMA || null;
+    const montoSug = payload.monto_sugerido_mxn !== undefined ? payload.monto_sugerido_mxn : (mInfo.montoSugerido || 0);
+    const cert = payload.certificado_vet_path || mInfo.certificadoVeterinario || null;
+
     const r = await pool.query(
       `INSERT INTO bd_transaccional.SolicitudApoyo
          (mascota_id, usuario_id, peso_actual_kg, peso_ideal_kg, ima_calculado,
           clasificacion_ima, monto_sugerido_mxn, certificado_vet_path)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [mascota_id, req.usuario.id, peso_actual_kg, peso_ideal_kg || null,
-       ima_calculado || null, clasificacion_ima || null,
-       monto_sugerido_mxn || 0, certificado_vet_path || null]
+      [finalMascotaId, req.usuario.id, pesoActual, pesoIdeal,
+       ima, clasificacion, montoSug, cert]
     );
 
     res.status(201).json(r.rows[0]);

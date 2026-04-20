@@ -189,9 +189,9 @@ export default function AdminPage() {
                         <td style={{ color: 'var(--color-text-muted)', fontFamily: 'monospace' }}>{p.id}</td>
                         <td>
                           <span className={`badge badge-${
-                            p.montoPeso === 0            ? 'success'
-                            : p.imaMax <= 0.84           ? 'info'
-                            : p.imaMax <= 1.30           ? 'warning'
+                            p.clasificacionIMA === 'Peso ideal' ? 'success'
+                            : p.clasificacionIMA === 'Bajo peso' ? 'info'
+                            : p.clasificacionIMA === 'Sobrepeso' ? 'warning'
                             : 'danger'
                           }`}>
                             {p.clasificacionIMA}

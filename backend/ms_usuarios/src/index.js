@@ -49,7 +49,7 @@ function verificarJWT(req, res, next) {
 
   const token = authHeader.split(' ')[1];
   try {
-    req.usuario = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    req.usuario = jwt.verify(token, process.env.JWT_SECRET || 'mascotas_jwt_secret_2024');
     next();
   } catch {
     return res.status(401).json({ error: 'Token inválido o expirado' });
@@ -103,7 +103,7 @@ app.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, curp: user.curp, nombre: user.nombre, rol: user.rol },
-      process.env.JWT_SECRET || 'secret',
+      process.env.JWT_SECRET || 'mascotas_jwt_secret_2024',
       { expiresIn: '8h' }
     );
 
