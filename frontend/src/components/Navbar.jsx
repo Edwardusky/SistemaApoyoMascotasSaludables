@@ -11,11 +11,12 @@ const ROL_LABELS = {
  * Navbar — Barra de navegación superior del sistema.
  * Muestra el logo, el nombre del sistema y el badge de rol del usuario activo.
  */
-export default function Navbar({ session }) {
+export default function Navbar({ session, onLogout }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    if (onLogout) onLogout();
     navigate('/login', { replace: true });
   };
 
@@ -51,7 +52,7 @@ export default function Navbar({ session }) {
               onClick={handleLogout}
               style={{ color: 'rgba(255,255,255,0.75)', borderColor: 'rgba(255,255,255,0.25)' }}
             >
-              Salir ↗
+              Cerrar sesión ↗
             </button>
           </>
         )}

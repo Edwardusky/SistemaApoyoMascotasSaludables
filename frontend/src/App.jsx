@@ -30,10 +30,10 @@ function ProtectedRoute({ children, rolesPermitidos, session }) {
  * AppLayout — Wrapper que incluye Navbar + Sidebar + contenido principal.
  * Solo se muestra si hay una sesión activa (no en la página de login).
  */
-function AppLayout({ session, children }) {
+function AppLayout({ session, children, onLogout }) {
   return (
     <>
-      <Navbar session={session} />
+      <Navbar session={session} onLogout={onLogout} />
       <Sidebar rol={session?.rol} />
       <main id="main-content" className="main-content" role="main">
         {children}
@@ -94,7 +94,7 @@ export default function App() {
           path="/ciudadano/*"
           element={
             <ProtectedRoute rolesPermitidos={['ciudadano']} session={session}>
-              <AppLayout session={session}>
+              <AppLayout session={session} onLogout={() => setSession(null)}>
                 <CiudadanoPage session={session} />
               </AppLayout>
             </ProtectedRoute>
@@ -106,7 +106,7 @@ export default function App() {
           path="/autoridad/*"
           element={
             <ProtectedRoute rolesPermitidos={['autoridad']} session={session}>
-              <AppLayout session={session}>
+              <AppLayout session={session} onLogout={() => setSession(null)}>
                 <AutoridadPage session={session} />
               </AppLayout>
             </ProtectedRoute>
@@ -118,7 +118,7 @@ export default function App() {
           path="/admin/*"
           element={
             <ProtectedRoute rolesPermitidos={['admin']} session={session}>
-              <AppLayout session={session}>
+              <AppLayout session={session} onLogout={() => setSession(null)}>
                 <AdminPage session={session} />
               </AppLayout>
             </ProtectedRoute>

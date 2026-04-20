@@ -309,7 +309,7 @@ export default function RegisterPage() {
         </div>
 
         <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginTop: '1.25rem' }}>
-          © 2024 Gobierno Municipal · Sistema de Apoyo para Mascotas Saludables
+          &copy; {new Date().getFullYear()} Gobierno Municipal &middot; Sistema de Apoyo para Mascotas Saludables
         </p>
       </div>
     </div>

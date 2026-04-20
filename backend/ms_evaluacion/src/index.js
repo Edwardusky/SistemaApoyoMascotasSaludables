@@ -25,12 +25,10 @@
 
 const express  = require('express');
 const { Pool } = require('pg');
-const cors     = require('cors');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });

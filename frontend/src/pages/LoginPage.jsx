@@ -222,7 +222,7 @@ export default function LoginPage({ onLogin }) {
         </div>
 
         <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: '1.5rem' }}>
-          © 2024 Gobierno Municipal · Todos los derechos reservados
+          &copy; {new Date().getFullYear()} Gobierno Municipal &middot; Sistema de Apoyo para Mascotas Saludables
         </p>
       </div>
     </div>

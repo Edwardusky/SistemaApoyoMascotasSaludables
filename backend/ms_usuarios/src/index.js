@@ -23,13 +23,12 @@ const express   = require('express');
 const { Pool }  = require('pg');
 const bcrypt    = require('bcryptjs');
 const jwt       = require('jsonwebtoken');
-const cors      = require('cors');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ────────────────────────────────────────────
-app.use(cors());
+// CORS lo maneja el API Gateway (nginx). No configurar aquí.
 app.use(express.json());
 
 // ── Conexión a PostgreSQL ─────────────────────────────────
