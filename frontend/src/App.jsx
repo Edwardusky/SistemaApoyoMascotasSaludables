@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import Navbar from './components/Navbar.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
 import CiudadanoPage from './pages/CiudadanoPage.jsx';
 import AutoridadPage from './pages/AutoridadPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
@@ -60,6 +61,20 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Registro — sin auth, solo para nuevos ciudadanos */}
+        <Route
+          path="/registro"
+          element={
+            session
+              ? <Navigate to={
+                  session.rol === 'ciudadano' ? '/ciudadano'
+                  : session.rol === 'autoridad' ? '/autoridad'
+                  : '/admin'
+                } replace />
+              : <RegisterPage />
+          }
+        />
+
         {/* Login — sin layout */}
         <Route
           path="/login"

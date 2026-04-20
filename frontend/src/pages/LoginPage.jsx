@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../services/api.service.js';
 
 /**
- * LoginPage — Autenticación del sistema.
+ * LoginPage — Autenticación del sistema (conectada al Backend real).
  *
- * CURP: se solicita como identificador principal.
- * IMPORTANTE (según SRS): La validación real del CURP del ciudadano es responsabilidad
- * de la Autoridad humana, no del sistema. El sistema solo verifica que el campo no esté vacío.
+ * Usuarios pre-cargados en la BD (contraseña: 1234):
+ *   Ciudadano  → GOMA850312MDFNRR09
+ *   Autoridad  → RAOF900615HDFMRR05
+ *   Admin      → ADSI800101HDFMIN01
  *
- * Credenciales de prueba (Fase 2 / mocks):
- *   Ciudadano  → CURP: GOMA850312MDFNRR09  / Password: 1234
- *   Autoridad  → CURP: RAOF900615HDFMRR05  / Password: 1234
- *   Admin      → CURP: ADSI800101HDFMIN01   / Password: 1234
+ * La validación del CURP es responsabilidad de la Autoridad humana.
  */
 export default function LoginPage({ onLogin }) {
   const navigate = useNavigate();
@@ -192,25 +190,28 @@ export default function LoginPage({ onLogin }) {
               </button>
             </form>
 
-            {/* Info de credenciales de prueba */}
-            <details style={{ marginTop: '1.5rem' }}>
-              <summary style={{
-                fontSize: '0.78rem',
-                color: 'var(--color-text-muted)',
-                cursor: 'pointer',
-                userSelect: 'none',
-              }}>
-                🧪 Credenciales de demostración (Fase 2)
+            {/* Link a registro */}
+            <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+              ¿Eres ciudadano y no tienes cuenta?{' '}
+              <Link
+                to="/registro"
+                id="link-ir-registro"
+                style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}
+              >
+                Regístrate aquí →
+              </Link>
+            </p>
+
+            {/* Credenciales demo (Backend real) */}
+            <details style={{ marginTop: '1rem' }}>
+              <summary style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', cursor: 'pointer', userSelect: 'none' }}>
+                🔑 Cuentas de demostración (Backend real)
               </summary>
               <div style={{
-                marginTop: '0.75rem',
-                background: 'var(--color-surface)',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.75rem',
-                fontSize: '0.78rem',
-                fontFamily: 'monospace',
-                color: 'var(--color-text-secondary)',
-                lineHeight: 2,
+                marginTop: '0.75rem', background: 'var(--color-surface)',
+                borderRadius: 'var(--radius-md)', padding: '0.75rem',
+                fontSize: '0.78rem', fontFamily: 'monospace',
+                color: 'var(--color-text-secondary)', lineHeight: 2,
               }}>
                 <div>👤 <strong>Ciudadano:</strong> GOMA850312MDFNRR09 / 1234</div>
                 <div>🏛️ <strong>Autoridad:</strong> RAOF900615HDFMRR05 / 1234</div>
