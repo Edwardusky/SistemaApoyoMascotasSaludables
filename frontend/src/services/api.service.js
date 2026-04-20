@@ -248,6 +248,35 @@ export function logout() {
   sessionStorage.removeItem('token');
 }
 
+// ─── ADMIN DE USUARIOS (ms_usuarios) ─────────────────────────────────────────
+
+export async function getUsuariosAdmin() {
+  return apiFetch(`${API_BASE_URL}/usuarios/admin/usuarios`, { headers: authHeaders() });
+}
+
+export async function createUsuarioAdmin(datos) {
+  return apiFetch(`${API_BASE_URL}/usuarios/admin/usuarios`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(datos)
+  });
+}
+
+export async function updateUsuarioAdmin(id, datos) {
+  return apiFetch(`${API_BASE_URL}/usuarios/admin/usuarios/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(datos)
+  });
+}
+
+export async function deleteUsuarioAdmin(id) {
+  return apiFetch(`${API_BASE_URL}/usuarios/admin/usuarios/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders()
+  });
+}
+
 export function getSession() {
   const raw = sessionStorage.getItem('session');
   return raw ? JSON.parse(raw) : null;

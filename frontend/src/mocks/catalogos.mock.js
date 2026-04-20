@@ -66,11 +66,18 @@ export function calcularIMA(pesoActual, pesoIdeal) {
  */
 export function clasificarIMA(ima) {
   if (ima === null || isNaN(ima)) return { label: 'Sin calcular', clase: 'neutral', descripcion: '—' };
-  if (ima < 0.85)  return { label: 'Bajo peso',  clase: 'underweight', descripcion: 'Por debajo del rango saludable (50% de apoyo)' };
+  if (ima < 0.85)  return { label: 'Bajo peso',  clase: 'underweight', descripcion: 'Por debajo del rango saludable (70% de apoyo)' };
   if (ima <= 1.15) return { label: 'Peso ideal', clase: 'normal',      descripcion: 'Rango saludable (100% de apoyo)' };
-  if (ima <= 1.30) return { label: 'Sobrepeso',  clase: 'overweight',  descripcion: 'Requiere plan de dieta (50% de apoyo)' };
+  if (ima <= 1.30) return { label: 'Sobrepeso',  clase: 'overweight',  descripcion: 'Requiere plan de dieta (30% de apoyo)' };
   return           { label: 'Obeso',      clase: 'obese',       descripcion: 'Riesgo alto para la salud (0% de apoyo)' };
 }
+
+export const POLITICAS_APOYO = [
+  { id: 1, clasificacionIMA: 'Bajo peso',        imaMin: 0.00, imaMax: 0.84, montoPeso: 70,  descripcion: 'Por debajo del rango saludable (70% de apoyo)' },
+  { id: 2, clasificacionIMA: 'Peso ideal',       imaMin: 0.85, imaMax: 1.15, montoPeso: 100, descripcion: 'Rango saludable - 100% de apoyo económico' },
+  { id: 3, clasificacionIMA: 'Sobrepeso',        imaMin: 1.16, imaMax: 1.30, montoPeso: 30,  descripcion: 'Plan nutricional requerido (30% de apoyo)' },
+  { id: 4, clasificacionIMA: 'Obeso',            imaMin: 1.31, imaMax: 9.99, montoPeso: 0,   descripcion: 'Riesgo de salud elevado (0% de apoyo)' },
+];
 
 // Peso ideal de referencia (kg): clave = `${razaId}-${tamanoId}`
 export const PESOS_IDEALES = {

@@ -79,7 +79,7 @@ app.post('/login', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, curp, nombre, rol, password_hash, activo
+      `SELECT id, curp, nombre, rol, password_hash, activo, telefono, email
        FROM bd_transaccional.Usuario
        WHERE curp = $1`,
       [curp.toUpperCase()]
@@ -109,7 +109,7 @@ app.post('/login', async (req, res) => {
 
     res.json({
       token,
-      usuario: { id: user.id, nombre: user.nombre, curp: user.curp, rol: user.rol },
+      usuario: { id: user.id, nombre: user.nombre, curp: user.curp, rol: user.rol, telefono: user.telefono, email: user.email }
     });
   } catch (err) {
     console.error('[ms_usuarios] /login error:', err.message);
@@ -171,6 +171,96 @@ app.get('/perfil', verificarJWT, async (req, res) => {
   } catch (err) {
     console.error('[ms_usuarios] /perfil error:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+// CRUD ADMINISTRACIÓN DE USUARIOS
+// ─────────────────────────────────────────────────────────
+
+function verificarAdmin(req, res, next) {
+  if (req.usuario?.rol !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado. Se requiere rol de administrador.' });
+  }
+  next();
+}
+
+// GET /admin/usuarios
+app.get('/admin/usuarios', verificarJWT, verificarAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, curp, nombre, telefono, email, rol, activo, created_at
+       FROM bd_transaccional.Usuario
+       ORDER BY created_at DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('[ms_usuarios] GET /admin/usuarios error:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// POST /admin/usuarios
+app.post('/admin/usuarios', verificarJWT, verificarAdmin, async (req, res) => {
+  const { curp, nombre, telefono, email, password, rol, activo } = req.body;
+  if (!curp || !nombre || !password)
+    return res.status(400).json({ error: 'CURP, nombre y contraseña son obligatorios' });
+  
+  try {
+    const password_hash = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      `INSERT INTO bd_transaccional.Usuario (curp, nombre, telefono, email, password_hash, rol, activo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, curp, nombre, rol, activo`,
+      [curp.toUpperCase(), nombre, telefono || null, email || null, password_hash, rol || 'ciudadano', activo !== undefined ? activo : true]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505')
+      return res.status(409).json({ error: 'Ya existe un usuario con ese CURP' });
+    console.error('[ms_usuarios] POST /admin/usuarios error:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// PUT /admin/usuarios/:id
+app.put('/admin/usuarios/:id', verificarJWT, verificarAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { nombre, telefono, email, rol, activo, password } = req.body;
+  try {
+    let query, values;
+    if (password) {
+      const password_hash = await bcrypt.hash(password, 10);
+      query = `UPDATE bd_transaccional.Usuario 
+               SET nombre = $1, telefono = $2, email = $3, rol = $4, activo = $5, password_hash = $6
+               WHERE id = $7 RETURNING id, curp, nombre, rol, activo`;
+      values = [nombre, telefono || null, email || null, rol, activo, password_hash, id];
+    } else {
+      query = `UPDATE bd_transaccional.Usuario 
+               SET nombre = $1, telefono = $2, email = $3, rol = $4, activo = $5
+               WHERE id = $6 RETURNING id, curp, nombre, rol, activo`;
+      values = [nombre, telefono || null, email || null, rol, activo, id];
+    }
+    
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('[ms_usuarios] PUT /admin/usuarios error:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// DELETE /admin/usuarios/:id
+app.delete('/admin/usuarios/:id', verificarJWT, verificarAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`DELETE FROM bd_transaccional.Usuario WHERE id = $1 RETURNING id`, [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json({ message: 'Usuario eliminado correctamente' });
+  } catch (err) {
+    console.error('[ms_usuarios] DELETE /admin/usuarios error:', err.message);
+    res.status(500).json({ error: 'No se pudo eliminar el usuario (podría tener dependencias)' });
   }
 });
 

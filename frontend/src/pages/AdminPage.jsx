@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   getMetricas, getPoliticasApoyo, getCostosAlimento,
+  getUsuariosAdmin, createUsuarioAdmin, updateUsuarioAdmin, deleteUsuarioAdmin
 } from '../services/api.service.js';
 
 /**
@@ -17,11 +18,68 @@ export default function AdminPage() {
   const [costos, setCostos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Estados para CRUD de Usuarios
+  const [usuarios, setUsuarios] = useState([]);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userForm, setUserForm] = useState({ curp: '', nombre: '', email: '', telefono: '', rol: 'ciudadano', password: '', activo: true });
+
   useEffect(() => {
     Promise.all([getMetricas(), getPoliticasApoyo(), getCostosAlimento()])
       .then(([m, p, c]) => { setMetricas(m); setPoliticas(p); setCostos(c); })
+      .catch(e => console.error("Error al cargar datos base", e))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (seccion === 'usuarios') {
+      cargarUsuarios();
+    }
+  }, [seccion]);
+
+  const cargarUsuarios = () => {
+    getUsuariosAdmin().then(setUsuarios).catch(err => alert("Error cargando usuarios: " + err.message));
+  };
+
+  const handleOpenUserModal = (user = null) => {
+    if (user) {
+      setEditingUser(user);
+      setUserForm({ curp: user.curp, nombre: user.nombre, email: user.email || '', telefono: user.telefono || '', rol: user.rol, activo: user.activo, password: '' });
+    } else {
+      setEditingUser(null);
+      setUserForm({ curp: '', nombre: '', email: '', telefono: '', rol: 'ciudadano', password: '', activo: true });
+    }
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingUser) {
+        await updateUsuarioAdmin(editingUser.id, userForm);
+        alert('Usuario actualizado');
+      } else {
+        await createUsuarioAdmin(userForm);
+        alert('Usuario creado');
+      }
+      setShowUserModal(false);
+      cargarUsuarios();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (confirm('¿Seguro que deseas eliminar a este usuario?')) {
+      try {
+        await deleteUsuarioAdmin(id);
+        alert('Usuario eliminado');
+        cargarUsuarios();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  };
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--color-text-muted)' }}>
@@ -43,6 +101,7 @@ export default function AdminPage() {
           { id: 'dashboard', icon: '📊', label: 'Dashboard' },
           { id: 'politicas', icon: '📑', label: 'Políticas de Apoyo' },
           { id: 'costos',    icon: '💰', label: 'Costos de Alimento' },
+          { id: 'usuarios',  icon: '👥', label: 'Gestión de Usuarios' },
         ].map(s => (
           <button
             key={s.id}
@@ -272,6 +331,87 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── GESTIÓN DE USUARIOS (CRUD) ── */}
+      {seccion === 'usuarios' && (
+        <div id="admin-usuarios" className="animate-fade-in">
+          <div className="card">
+            <div className="card__header">
+              <div>
+                <div className="card__title">👥 Gestión de Usuarios</div>
+                <div className="card__subtitle">Alta, baja y modificación de ciudadanos y administradores</div>
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={() => handleOpenUserModal()}>
+                ➕ Nuevo Usuario
+              </button>
+            </div>
+            <div className="card__body">
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>CURP</th>
+                      <th>Nombre</th>
+                      <th>Rol</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usuarios.map(u => (
+                      <tr key={u.id}>
+                        <td style={{ fontFamily: 'monospace' }}>{u.curp}</td>
+                        <td>{u.nombre}</td>
+                        <td>
+                          <span className={`badge badge-${u.rol === 'admin' ? 'warning' : 'info'}`}>
+                            {u.rol}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge badge-${u.activo ? 'success' : 'danger'}`}>
+                            {u.activo ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleOpenUserModal(u)}>✏️ Editar</button>
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteUser(u.id)} style={{ color: 'var(--color-danger)' }}>🗑️</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL USUARIOS */}
+      {showUserModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div className="modal-content" style={{ background: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-md)', width: '90%', maxWidth: '500px' }}>
+            <h2>{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
+            <form onSubmit={handleSaveUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              <input className="input" placeholder="CURP" value={userForm.curp} onChange={e => setUserForm({...userForm, curp: e.target.value})} required disabled={!!editingUser} />
+              <input className="input" placeholder="Nombre completo" value={userForm.nombre} onChange={e => setUserForm({...userForm, nombre: e.target.value})} required />
+              <input className="input" type="email" placeholder="Email" value={userForm.email} onChange={e => setUserForm({...userForm, email: e.target.value})} />
+              <input className="input" placeholder="Teléfono" value={userForm.telefono} onChange={e => setUserForm({...userForm, telefono: e.target.value})} />
+              <select className="input" value={userForm.rol} onChange={e => setUserForm({...userForm, rol: e.target.value})}>
+                <option value="ciudadano">Ciudadano</option>
+                <option value="admin">Administrador</option>
+              </select>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input type="checkbox" checked={userForm.activo} onChange={e => setUserForm({...userForm, activo: e.target.checked})} /> Activo
+              </label>
+              <input className="input" type="password" placeholder={editingUser ? 'Nueva contraseña (opcional)' : 'Contraseña'} value={userForm.password} onChange={e => setUserForm({...userForm, password: e.target.value})} required={!editingUser} />
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowUserModal(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary">Guardar</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

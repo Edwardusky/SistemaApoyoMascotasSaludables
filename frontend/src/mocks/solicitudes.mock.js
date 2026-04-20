@@ -160,19 +160,18 @@ export function actualizarEstadoMock(id, nuevoEstado, comentario = '') {
  * Determina el monto de apoyo ($MXN) según el IMA de la mascota.
  */
 export const POLITICAS_APOYO = [
-  { id: 1, clasificacionIMA: 'Bajo Peso Severo', imaMin: 0.00, imaMax: 0.74, montoPeso: 1500, descripcion: 'Apoyo máximo: riesgo crítico de salud' },
-  { id: 2, clasificacionIMA: 'Bajo Peso',        imaMin: 0.75, imaMax: 0.84, montoPeso: 1000, descripcion: 'Apoyo alto: por debajo del rango saludable' },
-  { id: 3, clasificacionIMA: 'Peso Ideal',        imaMin: 0.85, imaMax: 1.15, montoPeso: 0,    descripcion: 'Sin apoyo: mascota en rango saludable' },
-  { id: 4, clasificacionIMA: 'Sobrepeso',         imaMin: 1.16, imaMax: 1.30, montoPeso: 850,  descripcion: 'Apoyo moderado: plan nutricional' },
-  { id: 5, clasificacionIMA: 'Obesidad',          imaMin: 1.31, imaMax: 9.99, montoPeso: 1200, descripcion: 'Apoyo alto: riesgo de salud elevado' },
+  { id: 1, clasificacionIMA: 'Bajo peso',        imaMin: 0.00, imaMax: 0.84, montoPeso: 70,  descripcion: 'Por debajo del rango saludable (70% de apoyo)' },
+  { id: 2, clasificacionIMA: 'Peso ideal',       imaMin: 0.85, imaMax: 1.15, montoPeso: 100, descripcion: 'Rango saludable - 100% de apoyo económico' },
+  { id: 3, clasificacionIMA: 'Sobrepeso',        imaMin: 1.16, imaMax: 1.30, montoPeso: 30,  descripcion: 'Plan nutricional requerido (30% de apoyo)' },
+  { id: 4, clasificacionIMA: 'Obeso',            imaMin: 1.31, imaMax: 9.99, montoPeso: 0,   descripcion: 'Riesgo de salud elevado (0% de apoyo)' },
 ];
 
 /** Calcula el monto sugerido según el IMA */
 export function calcularMontoSugerido(ima) {
   if (!ima) return 0;
-  if (ima < 0.85)  return 50;
+  if (ima < 0.85)  return 70;
   if (ima <= 1.15) return 100;
-  if (ima <= 1.30) return 50;
+  if (ima <= 1.30) return 30;
   return 0;
 }
 

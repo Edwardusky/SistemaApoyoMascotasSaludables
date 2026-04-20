@@ -64,9 +64,9 @@ function calcularIMA(pesoActual, pesoIdeal) {
 function clasificarIMA(ima) {
   // 4 estados: Bajo peso, Peso ideal, Sobrepeso, Obeso
   // 100% apoyo a Peso ideal, 0% a Obesidad
-  if (ima < 0.85)  return { clasificacion: 'Bajo peso',  porcentajeApoyo: 50,  montoApoyo: 50,  descripcion: 'Por debajo del rango saludable (50% de apoyo)' };
+  if (ima < 0.85)  return { clasificacion: 'Bajo peso',  porcentajeApoyo: 70,  montoApoyo: 70,  descripcion: 'Por debajo del rango saludable (70% de apoyo)' };
   if (ima <= 1.15) return { clasificacion: 'Peso ideal', porcentajeApoyo: 100, montoApoyo: 100, descripcion: 'Rango saludable — 100% de apoyo económico' };
-  if (ima <= 1.30) return { clasificacion: 'Sobrepeso',  porcentajeApoyo: 50,  montoApoyo: 50,  descripcion: 'Plan nutricional requerido (50% de apoyo)' };
+  if (ima <= 1.30) return { clasificacion: 'Sobrepeso',  porcentajeApoyo: 30,  montoApoyo: 30,  descripcion: 'Plan nutricional requerido (30% de apoyo)' };
   return           { clasificacion: 'Obeso',      porcentajeApoyo: 0,   montoApoyo: 0,   descripcion: 'Riesgo de salud elevado (0% de apoyo)' };
 }
 
