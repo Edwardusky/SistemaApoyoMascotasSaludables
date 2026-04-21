@@ -220,18 +220,14 @@ export default function AutoridadPage() {
 
   useEffect(() => {
     Promise.all([
-      getSolicitudes(),
-      getPoliticasApoyo(),
-      getCostosAlimento()
+      getSolicitudes().catch(e => { console.error("Error cargando solicitudes:", e); return []; }),
+      getPoliticasApoyo().catch(e => { console.error("Error cargando politicas:", e); return []; }),
+      getCostosAlimento().catch(e => { console.error("Error cargando costos:", e); return []; })
     ])
       .then(([sol, pol, cos]) => {
         setSolicitudes(sol);
         setPoliticas(pol);
         setCostos(cos);
-      })
-      .catch(e => {
-        console.error("Error cargando datos de autoridad:", e);
-        alert("Error cargando datos: " + e.message);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -267,7 +263,11 @@ export default function AutoridadPage() {
     setProcesando(true);
     try {
       const actualizada = await actualizarEstadoSolicitud(modal.solicitud.id, modal.accion, comentario);
-      setSolicitudes(prev => prev.map(s => s.id === actualizada.id ? actualizada : s));
+      setSolicitudes(prev => prev.map(s => 
+        s.id === actualizada.id 
+          ? { ...s, estado: actualizada.estado, comentarioAutoridad: actualizada.comentario_autoridad } 
+          : s
+      ));
     } finally {
       setProcesando(false);
       setModal(null);

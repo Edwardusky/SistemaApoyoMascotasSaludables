@@ -15,13 +15,13 @@ Este flujo de trabajo define las fases de codificación para el agente. Se divid
 ### Track A: Backend (Desarrollador 1)
 - **Paso 2.A.1**: Configurar API Gateway, middlewares de seguridad (CORS, JWT) y conexiones a Cloud SQL.
 - **Paso 2.A.2**: Desarrollar los 4 Microservicios (Administración, Usuarios, Evaluación, Solicitudes).
-- **Regla Estricta del Track A**: El agente limitará toda generación y modificación de código exclusivamente al directorio `/backend`.
+
 
 ### Track B: Frontend (Desarrollador 2)
 - **Paso 2.B.1**: Crear diseño base (UI/UX) en React SPA y enrutamiento (React Router).
 - **Paso 2.B.2**: Desarrollar vistas: Formulario Ciudadano (Cascada Tipo->Raza), Bandeja de Autoridad, Panel de Administrador.
 - **Paso 2.B.3**: Usar "Mocks" (datos simulados) basados en los Contratos de API (Paso 1.2).
-- **Regla Estricta del Track B**: El agente limitará toda generación y modificación de código exclusivamente al directorio `/frontend`.
+
 
 ## Fase 3: Integración y Pruebas (Trabajo Conjunto)
 - **Paso 3.1**: Reemplazar los "Mocks" del Frontend por llamadas reales `fetch/axios` al API Gateway del Backend.
