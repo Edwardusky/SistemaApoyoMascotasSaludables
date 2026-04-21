@@ -229,6 +229,10 @@ export default function AutoridadPage() {
         setPoliticas(pol);
         setCostos(cos);
       })
+      .catch(e => {
+        console.error("Error cargando datos de autoridad:", e);
+        alert("Error cargando datos: " + e.message);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -275,7 +279,7 @@ export default function AutoridadPage() {
     const matchEstado = !filtroEstado || s.estado === filtroEstado;
     const matchTipo   = !filtroTipo   || s.mascota.tipoNombre === filtroTipo;
     const matchBusq   = !busqueda || [s.id, s.dueno.nombre, s.mascota.nombre, s.dueno.curp]
-      .some(v => v?.toLowerCase().includes(busqueda.toLowerCase()));
+      .some(v => String(v).toLowerCase().includes(busqueda.toLowerCase()));
     return matchEstado && matchTipo && matchBusq;
   });
 
