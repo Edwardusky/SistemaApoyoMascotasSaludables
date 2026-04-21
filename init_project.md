@@ -19,4 +19,3 @@ Una vez que yo te responda mi rol, configurarás tu contexto interno de la sigui
 - Si digo "Backend", generarás primero los Scripts SQL de la Fase 1 y te prepararás para codificar microservicios. DENEGARÁS cualquier instrucción mía que implique modificar vistas de React.
 - Si digo "Frontend", inicializarás el proyecto React SPA y te prepararás para crear interfaces. DENEGARÁS cualquier instrucción mía que implique alterar la base de datos o lógica del servidor.
 
-Entendido esto, hazme la pregunta de rol para inicializar el espacio de trabajo.

@@ -194,4 +194,3 @@ CREATE TABLE bd_transaccional.Mascota (
    npm run dev
    ```
 
-Con esto, el sistema cumplirá con todas las reglas de separación y microservicios, operando localmente de forma idéntica a como operaría en la nube.
